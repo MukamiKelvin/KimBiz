@@ -25,6 +25,8 @@ import RecordSaleForm from "../../components/RecordSaleForm";
 
 import { Sale } from "../../types/sale";
 
+import SaleDetails from "../../components/SaleDetails";
+
 
 // ============================================================
 // SALES PAGE COMPONENT
@@ -38,6 +40,8 @@ export default function SalesPage() {
   // ==========================================================
 
   const [showRecordSaleForm, setShowRecordSaleForm] = useState(false);
+
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
 
   // ==========================================================
@@ -116,6 +120,10 @@ export default function SalesPage() {
 
     setEditingSale(null);
   }
+
+  function handleViewSale(sale: Sale) {
+  setSelectedSale(sale);
+}
 
 
   // ==========================================================
@@ -340,11 +348,23 @@ export default function SalesPage() {
       <div className="mt-6">
 
         <SalesTable
-          sales={sales}
-          onEdit={handleEditSale}
-        />
+  sales={sales}
+  onView={handleViewSale}
+  onEdit={handleEditSale}
+/>
 
       </div>
+
+      {selectedSale && (
+  <SaleDetails
+    sale={selectedSale}
+    onClose={() => setSelectedSale(null)}
+    onEdit={(sale) => {
+      setSelectedSale(null);
+      handleEditSale(sale);
+    }}
+  />
+)}
 
 
     </main>

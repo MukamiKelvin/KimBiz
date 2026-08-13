@@ -5,36 +5,34 @@
 //
 // The sales data is received from the parent component.
 //
-// This component also provides an Edit action for each sale.
-// When Edit is clicked, the selected sale is sent back to the
-// parent component through the onEdit function.
+// This component provides:
+// 1. View action
+// 2. Edit action
+//
+// View → Opens complete sale details.
+// Edit → Opens the sale in the editing form.
 // ============================================================
 
 
 // ============================================================
 // SALE TYPE
 // ============================================================
-// Imports the Sale interface that defines the structure
-// and data types of every sale.
-// ============================================================
 
 import { Sale } from "../types/sale";
+import { Eye } from "lucide-react";
 
 
 // ============================================================
 // SALES TABLE PROPS
 // ============================================================
-// Defines the information and functions that this component
-// receives from its parent.
-//
-// sales  → The list of sales displayed in the table.
-//
-// onEdit → A function supplied by the parent component.
-//          It receives the sale that the user wants to edit.
-// ============================================================
 
 interface SalesTableProps {
   sales: Sale[];
+
+  // Opens the selected sale in the details view.
+  onView: (sale: Sale) => void;
+
+  // Opens the selected sale in edit mode.
   onEdit: (sale: Sale) => void;
 }
 
@@ -45,6 +43,7 @@ interface SalesTableProps {
 
 export default function SalesTable({
   sales,
+  onView,
   onEdit,
 }: SalesTableProps) {
 
@@ -71,14 +70,11 @@ export default function SalesTable({
 
       {/* ======================================================
           TABLE
-          ------------------------------------------------------
-          overflow-x-auto allows the table to scroll horizontally
-          on smaller screens instead of breaking the layout.
           ====================================================== */}
 
       <div className="overflow-x-auto">
 
-        <table className="w-full min-w-[800px]">
+        <table className="w-full min-w-[850px]">
 
 
           {/* ==================================================
@@ -131,11 +127,7 @@ export default function SalesTable({
               </th>
 
 
-              {/* ==================================================
-                  ACTIONS
-                  --------------------------------------------------
-                  Contains actions that can be performed on a sale.
-                  ================================================== */}
+              {/* Actions */}
 
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Actions
@@ -148,9 +140,6 @@ export default function SalesTable({
 
           {/* ==================================================
               TABLE BODY
-              --------------------------------------------------
-              .map() loops through the sales array and creates
-              one table row for every sale.
               ================================================== */}
 
           <tbody>
@@ -210,8 +199,6 @@ export default function SalesTable({
 
                 {/* ==================================================
                     STATUS
-                    --------------------------------------------------
-                    The badge changes depending on the sale status.
                     ================================================== */}
 
                 <td className="px-6 py-4">
@@ -220,7 +207,15 @@ export default function SalesTable({
                     className={`rounded-full px-3 py-1 text-xs font-medium ${
                       sale.status === "Paid"
                         ? "bg-green-100 text-green-700"
-                        : "bg-amber-100 text-amber-700"
+                        : sale.status === "Pending"
+                        ? "bg-amber-100 text-amber-700"
+                        : sale.status === "Partially Paid"
+                        ? "bg-blue-100 text-blue-700"
+                        : sale.status === "Overdue"
+                        ? "bg-red-100 text-red-700"
+                        : sale.status === "Cancelled"
+                        ? "bg-slate-200 text-slate-700"
+                        : "bg-purple-100 text-purple-700"
                     }`}
                   >
                     {sale.status}
@@ -230,21 +225,45 @@ export default function SalesTable({
 
 
                 {/* ==================================================
-                    EDIT ACTION
+                    ACTIONS
                     --------------------------------------------------
-                    Sends the selected sale back to the parent
-                    component so it can be opened in edit mode.
+                    View → Opens complete sale information.
+                    Edit → Opens the sale in edit mode.
                     ================================================== */}
 
                 <td className="px-6 py-4">
 
-                  <button
-                    type="button"
-                    onClick={() => onEdit(sale)}
-                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50"
-                  >
-                    Edit
-                  </button>
+                  <div className="flex items-center gap-2">
+
+
+                    {/* ==================================================
+                        VIEW
+                        ================================================== */}
+
+                    <button
+  type="button"
+  onClick={() => onView(sale)}
+  title="View sale details"
+  aria-label={`View details for ${sale.id}`}
+  className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+>
+  <Eye size={18} />
+</button>
+
+
+                    {/* ==================================================
+                        EDIT
+                        ================================================== */}
+
+                    <button
+                      type="button"
+                      onClick={() => onEdit(sale)}
+                      className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50"
+                    >
+                      Edit
+                    </button>
+
+                  </div>
 
                 </td>
 
