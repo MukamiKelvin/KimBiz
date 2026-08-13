@@ -1,17 +1,44 @@
 // ============================================================
 // KIMBIZ - RECORD SALE FORM
 // ============================================================
-// This component will allow a business to record a new sale.
+// This component allows a business to:
 //
-// For now, we are only building the frontend form.
+// 1. Record a new sale.
+// 2. Edit an existing sale.
+//
 // Later, the form will send the sale to our backend/database.
 // ============================================================
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Sale } from "../types/sale";
+
+
+// ============================================================
+// RECORD SALE FORM PROPS
+// ============================================================
+// onSaleCreated
+// ------------------------------------------------------------
+// Used when creating a brand-new sale.
+//
+// editingSale
+// ------------------------------------------------------------
+// Contains the sale currently being edited.
+//
+// null = creating a new sale.
+//
+// onSaleUpdated
+// ------------------------------------------------------------
+// Sends the edited sale back to the Sales page.
+// ============================================================
+
+interface RecordSaleFormProps {
+  onSaleCreated: (sale: Sale) => void;
+  editingSale?: Sale | null;
+  onSaleUpdated?: (sale: Sale) => void;
+}
 
 
 // ============================================================
@@ -20,116 +47,170 @@ import { Sale } from "../types/sale";
 
 export default function RecordSaleForm({
   onSaleCreated,
-}: {
-  onSaleCreated: (sale: Sale) => void;
-}) {
+  editingSale = null,
+  onSaleUpdated,
+}: RecordSaleFormProps) {
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
   // CUSTOMER
-  // ----------------------------------------------------------
-  // useState allows React to remember the value entered
-  // into the customer field.
-  //
-  // customer = current value
-  // setCustomer = function used to change the value
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const [customer, setCustomer] = useState("");
 
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // PRODUCT
-  // ----------------------------------------------------------
-  // Stores the product selected by the user.
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const [product, setProduct] = useState("");
 
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // QUANTITY
-  // ----------------------------------------------------------
-  // Stores how many units were sold.
-  //
-  // We start with 1 because a sale normally contains
-  // at least one product.
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const [quantity, setQuantity] = useState(1);
 
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // UNIT PRICE
-  // ----------------------------------------------------------
-  // Stores the price of one unit of the selected product.
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const [unitPrice, setUnitPrice] = useState(0);
 
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // PAYMENT METHOD
-  // ----------------------------------------------------------
-  // Stores how the customer paid.
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const [paymentMethod, setPaymentMethod] = useState("M-Pesa");
 
+
   // ==========================================================
-// PAYMENT STATUS
-// ----------------------------------------------------------
-// Stores the payment status selected by the user.
-//
-// We start every new sale as "Paid" by default, but the user
-// can change it to any of the statuses supported by KimBiz.
-// ==========================================================
+  // PAYMENT STATUS
+  // ==========================================================
 
-const [paymentStatus, setPaymentStatus] = useState<
-  Sale["status"]
->("Paid");
+  const [paymentStatus, setPaymentStatus] = useState<
+    Sale["status"]
+  >("Paid");
 
-// ==========================================================
-// ADDITIONAL PAYMENT INFORMATION
-// ----------------------------------------------------------
-// These values are only needed for certain payment statuses.
-//
-// Example:
-// - Partially Paid → amount paid
-// - Pending → due date
-// - Overdue → overdue date
-// - Cancelled → cancellation date + reason
-// - Refunded → refund amount + refund date + reason
-// ==========================================================
 
-const [amountPaid, setAmountPaid] = useState(0);
+  // ==========================================================
+  // ADDITIONAL PAYMENT INFORMATION
+  // ==========================================================
 
-const [dueDate, setDueDate] = useState("");
+  const [amountPaid, setAmountPaid] = useState(0);
 
-const [overdueSince, setOverdueSince] = useState("");
+  const [dueDate, setDueDate] = useState("");
 
-const [cancellationDate, setCancellationDate] = useState("");
+  const [overdueSince, setOverdueSince] = useState("");
 
-const [cancellationReason, setCancellationReason] = useState("");
+  const [cancellationDate, setCancellationDate] = useState("");
 
-const [refundAmount, setRefundAmount] = useState(0);
+  const [cancellationReason, setCancellationReason] = useState("");
 
-const [refundDate, setRefundDate] = useState("");
+  const [refundAmount, setRefundAmount] = useState(0);
 
-const [refundReason, setRefundReason] = useState("");
+  const [refundDate, setRefundDate] = useState("");
+
+  const [refundReason, setRefundReason] = useState("");
+
+
+  // ==========================================================
+  // LOAD EXISTING SALE WHEN EDITING
+  // ----------------------------------------------------------
+  // When the user clicks Edit in SalesTable, the selected sale
+  // is passed into this component.
+  //
+  // This effect loads all of that sale's information into
+  // the form fields.
+  // ==========================================================
+
+  useEffect(() => {
+
+    // If there is no sale being edited, do nothing.
+    if (!editingSale) {
+      return;
+    }
+
+
+    // --------------------------------------------------------
+    // BASIC SALE INFORMATION
+    // --------------------------------------------------------
+
+    setCustomer(editingSale.customer);
+
+    setProduct(editingSale.product);
+
+    setQuantity(editingSale.quantity);
+
+
+    // --------------------------------------------------------
+    // UNIT PRICE
+    // --------------------------------------------------------
+    // The Sale object stores the total amount.
+    //
+    // We calculate the original unit price using:
+    //
+    // total amount ÷ quantity
+    // --------------------------------------------------------
+
+    setUnitPrice(
+      editingSale.quantity > 0
+        ? editingSale.amount / editingSale.quantity
+        : 0
+    );
+
+
+    // --------------------------------------------------------
+    // PAYMENT INFORMATION
+    // --------------------------------------------------------
+
+    setPaymentMethod(editingSale.paymentMethod);
+
+    setPaymentStatus(editingSale.status);
+
+
+    // --------------------------------------------------------
+    // CONDITIONAL PAYMENT INFORMATION
+    // --------------------------------------------------------
+
+    setAmountPaid(editingSale.amountPaid ?? 0);
+
+    setDueDate(editingSale.dueDate ?? "");
+
+    setOverdueSince(editingSale.overdueSince ?? "");
+
+    setCancellationDate(
+      editingSale.cancellationDate ?? ""
+    );
+
+    setCancellationReason(
+      editingSale.cancellationReason ?? ""
+    );
+
+    setRefundAmount(
+      editingSale.refundAmount ?? 0
+    );
+
+    setRefundDate(
+      editingSale.refundDate ?? ""
+    );
+
+    setRefundReason(
+      editingSale.refundReason ?? ""
+    );
+
+  }, [editingSale]);
 
 
   // ==========================================================
   // AUTOMATIC TOTAL
-  // ==========================================================
-  // Instead of asking the user to enter the total manually,
-  // KimBiz calculates it automatically.
+  // ----------------------------------------------------------
+  // KimBiz calculates the total automatically.
   //
-  // Example:
-  //
-  // Quantity = 2
-  // Unit price = KSh 2,500
-  //
-  // Total = 2 × 2,500 = KSh 5,000
+  // Quantity × Unit Price = Total
   // ==========================================================
 
   const total = quantity * unitPrice;
@@ -138,102 +219,140 @@ const [refundReason, setRefundReason] = useState("");
   // ==========================================================
   // FORM SUBMISSION
   // ==========================================================
-  // This function will eventually send the sale to our
-  // backend/database.
-  //
-  // For now, we simply prevent the browser from refreshing.
-  // ==========================================================
 
- function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-  event.preventDefault();
+  function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
 
-  // ==========================================================
-// CREATE NEW SALE
-// ----------------------------------------------------------
-// Builds the Sale object from the information entered in
-// the form.
-//
-// The conditional payment fields are included so that the
-// additional payment information is not lost when the sale
-// is submitted.
-// ==========================================================
-
-const newSale: Sale = {
-  id: `#SALE${Date.now()}`,
-
-  customer,
-
-  product,
-
-  date: new Date().toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }),
-
-  quantity,
-
-  amount: total,
-
-  paymentMethod,
-
-  status: paymentStatus,
-
-  // Additional payment information.
-  amountPaid:
-    paymentStatus === "Partially Paid"
-      ? amountPaid
-      : undefined,
-
-  dueDate:
-    paymentStatus === "Pending"
-      ? dueDate
-      : undefined,
-
-  overdueSince:
-    paymentStatus === "Overdue"
-      ? overdueSince
-      : undefined,
-
-  cancellationDate:
-    paymentStatus === "Cancelled"
-      ? cancellationDate
-      : undefined,
-
-  cancellationReason:
-    paymentStatus === "Cancelled"
-      ? cancellationReason
-      : undefined,
-
-  refundAmount:
-    paymentStatus === "Refunded"
-      ? refundAmount
-      : undefined,
-
-  refundDate:
-    paymentStatus === "Refunded"
-      ? refundDate
-      : undefined,
-
-  refundReason:
-    paymentStatus === "Refunded"
-      ? refundReason
-      : undefined,
-};
-
-  // ==========================================================
-  // SEND SALE TO THE PARENT COMPONENT
-  // ==========================================================
-  // The Sales page will receive this sale and add it to
-  // the sales list.
-  // ==========================================================
-
-  onSaleCreated(newSale);
+    event.preventDefault();
 
 
-  // Temporary debugging.
-  console.log(newSale);
-}
+    // ========================================================
+    // SALE DATA
+    // --------------------------------------------------------
+    // If we are editing an existing sale, keep its original ID
+    // and original date.
+    //
+    // If this is a new sale, create a new ID and date.
+    // ========================================================
+
+    const sale: Sale = {
+
+      id: editingSale
+        ? editingSale.id
+        : `#SALE${Date.now()}`,
+
+      customer,
+
+      product,
+
+      date: editingSale
+        ? editingSale.date
+        : new Date().toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }),
+
+      quantity,
+
+      amount: total,
+
+      paymentMethod,
+
+      status: paymentStatus,
+
+
+      // ======================================================
+      // ADDITIONAL PAYMENT INFORMATION
+      // ======================================================
+
+      amountPaid:
+        paymentStatus === "Partially Paid"
+          ? amountPaid
+          : undefined,
+
+
+      dueDate:
+        paymentStatus === "Pending"
+          ? dueDate
+          : undefined,
+
+
+      overdueSince:
+        paymentStatus === "Overdue"
+          ? overdueSince
+          : undefined,
+
+
+      cancellationDate:
+        paymentStatus === "Cancelled"
+          ? cancellationDate
+          : undefined,
+
+
+      cancellationReason:
+        paymentStatus === "Cancelled"
+          ? cancellationReason
+          : undefined,
+
+
+      refundAmount:
+        paymentStatus === "Refunded"
+          ? refundAmount
+          : undefined,
+
+
+      refundDate:
+        paymentStatus === "Refunded"
+          ? refundDate
+          : undefined,
+
+
+      refundReason:
+        paymentStatus === "Refunded"
+          ? refundReason
+          : undefined,
+    };
+
+
+    // ========================================================
+    // CREATE OR UPDATE
+    // --------------------------------------------------------
+    // New sale
+    //     ↓
+    // onSaleCreated()
+    //
+    // Existing sale
+    //     ↓
+    // onSaleUpdated()
+    // ========================================================
+
+    if (editingSale) {
+
+      if (onSaleUpdated) {
+        onSaleUpdated(sale);
+      }
+
+    } else {
+
+      onSaleCreated(sale);
+
+    }
+
+
+    // ========================================================
+    // DEBUGGING
+    // ========================================================
+
+    console.log(
+      editingSale
+        ? "Sale updated:"
+        : "New sale created:",
+      sale
+    );
+
+  }
 
 
   // ==========================================================
@@ -246,6 +365,7 @@ const newSale: Sale = {
       onSubmit={handleSubmit}
       className="space-y-6"
     >
+
 
       {/* ====================================================
           CUSTOMER
@@ -264,7 +384,9 @@ const newSale: Sale = {
           id="customer"
           type="text"
           value={customer}
-          onChange={(event) => setCustomer(event.target.value)}
+          onChange={(event) =>
+            setCustomer(event.target.value)
+          }
           placeholder="Enter customer name"
           className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
         />
@@ -289,7 +411,9 @@ const newSale: Sale = {
           id="product"
           type="text"
           value={product}
-          onChange={(event) => setProduct(event.target.value)}
+          onChange={(event) =>
+            setProduct(event.target.value)
+          }
           placeholder="Enter product name"
           className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
         />
@@ -302,6 +426,7 @@ const newSale: Sale = {
           ==================================================== */}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
 
         {/* Quantity */}
 
@@ -388,7 +513,9 @@ const newSale: Sale = {
         <select
           id="paymentMethod"
           value={paymentMethod}
-          onChange={(event) => setPaymentMethod(event.target.value)}
+          onChange={(event) =>
+            setPaymentMethod(event.target.value)
+          }
           className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
         >
 
@@ -412,229 +539,297 @@ const newSale: Sale = {
 
       </div>
 
+
+      {/* ====================================================
+          PAYMENT STATUS
+          ==================================================== */}
+
+      <div>
+
+        <label
+          htmlFor="paymentStatus"
+          className="mb-2 block text-sm font-medium text-slate-700"
+        >
+          Payment Status
+        </label>
+
+        <select
+          id="paymentStatus"
+          value={paymentStatus}
+          onChange={(event) =>
+            setPaymentStatus(
+              event.target.value as Sale["status"]
+            )
+          }
+          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
+        >
+
+          <option value="Paid">
+            Paid
+          </option>
+
+          <option value="Partially Paid">
+            Partially Paid
+          </option>
+
+          <option value="Pending">
+            Pending
+          </option>
+
+          <option value="Overdue">
+            Overdue
+          </option>
+
+          <option value="Cancelled">
+            Cancelled
+          </option>
+
+          <option value="Refunded">
+            Refunded
+          </option>
+
+        </select>
+
+      </div>
+
+
       {/* ======================================================
-    PAYMENT STATUS
-    ------------------------------------------------------
-    Allows the user to specify the current payment state
-    of the sale.
-    ====================================================== */}
-
-<div>
-  <label
-    htmlFor="paymentStatus"
-    className="mb-2 block text-sm font-medium text-slate-700"
-  >
-    Payment Status
-  </label>
-
-  <select
-    id="paymentStatus"
-    value={paymentStatus}
-    onChange={(event) =>
-      setPaymentStatus(event.target.value as Sale["status"])
-    }
-    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
-  >
-    <option value="Paid">Paid</option>
-    <option value="Partially Paid">Partially Paid</option>
-    <option value="Pending">Pending</option>
-    <option value="Overdue">Overdue</option>
-    <option value="Cancelled">Cancelled</option>
-    <option value="Refunded">Refunded</option>
-  </select>
-</div>
-
-{/* ======================================================
-    CONDITIONAL PAYMENT INFORMATION
-    ------------------------------------------------------
-    These fields only appear when the selected payment
-    status requires additional information.
-    ====================================================== */}
+          CONDITIONAL PAYMENT INFORMATION
+          ====================================================== */}
 
 
-{/* PARTIALLY PAID */}
-{paymentStatus === "Partially Paid" && (
-  <div className="mt-4">
-    <label
-      htmlFor="amountPaid"
-      className="mb-2 block text-sm font-medium text-slate-700"
-    >
-      Amount Paid
-    </label>
+      {/* PARTIALLY PAID */}
 
-    <input
-      id="amountPaid"
-      type="number"
-      min="0"
-      value={amountPaid}
-      onChange={(event) =>
-        setAmountPaid(Number(event.target.value))
-      }
-      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
-      placeholder="Enter amount paid"
-    />
-  </div>
-)}
+      {paymentStatus === "Partially Paid" && (
 
-{/* PENDING */}
-{paymentStatus === "Pending" && (
-  <div className="mt-4">
-    <label
-      htmlFor="dueDate"
-      className="mb-2 block text-sm font-medium text-slate-700"
-    >
-      Due Date
-    </label>
+        <div className="mt-4">
 
-    <input
-      id="dueDate"
-      type="date"
-      value={dueDate}
-      onChange={(event) =>
-        setDueDate(event.target.value)
-      }
-      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
-    />
-  </div>
-)}
+          <label
+            htmlFor="amountPaid"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
+            Amount Paid
+          </label>
 
-{/* OVERDUE */}
-{paymentStatus === "Overdue" && (
-  <div className="mt-4">
-    <label
-      htmlFor="overdueSince"
-      className="mb-2 block text-sm font-medium text-slate-700"
-    >
-      Overdue Since
-    </label>
+          <input
+            id="amountPaid"
+            type="number"
+            min="0"
+            value={amountPaid}
+            onChange={(event) =>
+              setAmountPaid(
+                Number(event.target.value)
+              )
+            }
+            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
+            placeholder="Enter amount paid"
+          />
 
-    <input
-      id="overdueSince"
-      type="date"
-      value={overdueSince}
-      onChange={(event) =>
-        setOverdueSince(event.target.value)
-      }
-      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
-    />
-  </div>
-)}
+        </div>
 
-{/* CANCELLED */}
-{paymentStatus === "Cancelled" && (
-  <div className="mt-4 space-y-4">
-
-    <div>
-      <label
-        htmlFor="cancellationDate"
-        className="mb-2 block text-sm font-medium text-slate-700"
-      >
-        Cancellation Date
-      </label>
-
-      <input
-        id="cancellationDate"
-        type="date"
-        value={cancellationDate}
-        onChange={(event) =>
-          setCancellationDate(event.target.value)
-        }
-        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
-      />
-    </div>
+      )}
 
 
-    <div>
-      <label
-        htmlFor="cancellationReason"
-        className="mb-2 block text-sm font-medium text-slate-700"
-      >
-        Cancellation Reason
-      </label>
+      {/* PENDING */}
 
-      <textarea
-        id="cancellationReason"
-        value={cancellationReason}
-        onChange={(event) =>
-          setCancellationReason(event.target.value)
-        }
-        placeholder="Why was this sale cancelled?"
-        rows={3}
-        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
-      />
-    </div>
+      {paymentStatus === "Pending" && (
 
-  </div>
-)}
+        <div className="mt-4">
 
-{/* REFUNDED */}
-{paymentStatus === "Refunded" && (
-  <div className="mt-4 space-y-4">
+          <label
+            htmlFor="dueDate"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
+            Due Date
+          </label>
 
-    <div>
-      <label
-        htmlFor="refundAmount"
-        className="mb-2 block text-sm font-medium text-slate-700"
-      >
-        Refund Amount
-      </label>
+          <input
+            id="dueDate"
+            type="date"
+            value={dueDate}
+            onChange={(event) =>
+              setDueDate(event.target.value)
+            }
+            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
+          />
 
-      <input
-        id="refundAmount"
-        type="number"
-        min="0"
-        value={refundAmount}
-        onChange={(event) =>
-          setRefundAmount(Number(event.target.value))
-        }
-        placeholder="Enter refund amount"
-        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
-      />
-    </div>
+        </div>
+
+      )}
 
 
-    <div>
-      <label
-        htmlFor="refundDate"
-        className="mb-2 block text-sm font-medium text-slate-700"
-      >
-        Refund Date
-      </label>
+      {/* OVERDUE */}
 
-      <input
-        id="refundDate"
-        type="date"
-        value={refundDate}
-        onChange={(event) =>
-          setRefundDate(event.target.value)
-        }
-        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
-      />
-    </div>
+      {paymentStatus === "Overdue" && (
+
+        <div className="mt-4">
+
+          <label
+            htmlFor="overdueSince"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
+            Overdue Since
+          </label>
+
+          <input
+            id="overdueSince"
+            type="date"
+            value={overdueSince}
+            onChange={(event) =>
+              setOverdueSince(event.target.value)
+            }
+            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
+          />
+
+        </div>
+
+      )}
 
 
-    <div>
-      <label
-        htmlFor="refundReason"
-        className="mb-2 block text-sm font-medium text-slate-700"
-      >
-        Refund Reason
-      </label>
+      {/* CANCELLED */}
 
-      <textarea
-        id="refundReason"
-        value={refundReason}
-        onChange={(event) =>
-          setRefundReason(event.target.value)
-        }
-        placeholder="Why was this sale refunded?"
-        rows={3}
-        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
-      />
-    </div>
+      {paymentStatus === "Cancelled" && (
 
-  </div>
-)}
+        <div className="mt-4 space-y-4">
+
+
+          <div>
+
+            <label
+              htmlFor="cancellationDate"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Cancellation Date
+            </label>
+
+            <input
+              id="cancellationDate"
+              type="date"
+              value={cancellationDate}
+              onChange={(event) =>
+                setCancellationDate(
+                  event.target.value
+                )
+              }
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
+            />
+
+          </div>
+
+
+          <div>
+
+            <label
+              htmlFor="cancellationReason"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Cancellation Reason
+            </label>
+
+            <textarea
+              id="cancellationReason"
+              value={cancellationReason}
+              onChange={(event) =>
+                setCancellationReason(
+                  event.target.value
+                )
+              }
+              placeholder="Why was this sale cancelled?"
+              rows={3}
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
+            />
+
+          </div>
+
+        </div>
+
+      )}
+
+
+      {/* REFUNDED */}
+
+      {paymentStatus === "Refunded" && (
+
+        <div className="mt-4 space-y-4">
+
+
+          <div>
+
+            <label
+              htmlFor="refundAmount"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Refund Amount
+            </label>
+
+            <input
+              id="refundAmount"
+              type="number"
+              min="0"
+              value={refundAmount}
+              onChange={(event) =>
+                setRefundAmount(
+                  Number(event.target.value)
+                )
+              }
+              placeholder="Enter refund amount"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
+            />
+
+          </div>
+
+
+          <div>
+
+            <label
+              htmlFor="refundDate"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Refund Date
+            </label>
+
+            <input
+              id="refundDate"
+              type="date"
+              value={refundDate}
+              onChange={(event) =>
+                setRefundDate(
+                  event.target.value
+                )
+              }
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
+            />
+
+          </div>
+
+
+          <div>
+
+            <label
+              htmlFor="refundReason"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Refund Reason
+            </label>
+
+            <textarea
+              id="refundReason"
+              value={refundReason}
+              onChange={(event) =>
+                setRefundReason(
+                  event.target.value
+                )
+              }
+              placeholder="Why was this sale refunded?"
+              rows={3}
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
+            />
+
+          </div>
+
+        </div>
+
+      )}
 
 
       {/* ====================================================
@@ -645,8 +840,13 @@ const newSale: Sale = {
         type="submit"
         className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
       >
-        Record Sale
+
+        {editingSale
+          ? "Save Changes"
+          : "Record Sale"}
+
       </button>
+
 
     </form>
 

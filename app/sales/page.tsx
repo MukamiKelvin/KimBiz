@@ -5,18 +5,20 @@
 //
 // This page currently contains:
 // 1. Sales page header
-// 2. Sales KPI cards
+// 2. Record Sale / Edit Sale form
+// 3. Sales KPI cards
+// 4. Sales transactions table
 //
-// The values below are temporary sample data.
-// Later, they will come from our database.
+// The Sales page owns the sales data and controls both
+// creating and editing sales.
 // ============================================================
+
 "use client";
 
 import { useState } from "react";
 
 import KpiCard from "../../components/KpiCard";
 
-// Displays recent sales transactions.
 import SalesTable from "../../components/SalesTable";
 
 import RecordSaleForm from "../../components/RecordSaleForm";
@@ -30,160 +32,262 @@ import { Sale } from "../../types/sale";
 
 export default function SalesPage() {
 
-      // ==========================================================
+
+  // ==========================================================
   // RECORD SALE FORM VISIBILITY
-  // ----------------------------------------------------------
-  // Controls whether the Record Sale form is visible.
-  //
-  // false = form hidden
-  // true  = form visible
   // ==========================================================
 
   const [showRecordSaleForm, setShowRecordSaleForm] = useState(false);
 
+
   // ==========================================================
-// SALES DATA
-// ----------------------------------------------------------
-// The Sales page now owns the sales data.
-//
-// Later, this state will be replaced with data retrieved
-// from our database.
-// ==========================================================
+  // SALES DATA
+  // ==========================================================
 
-const [sales, setSales] = useState<Sale[]>([
-  {
-    id: "#SALE001",
-    customer: "John Kamau",
-    product: "Laptop",
-    date: "Aug 13, 2026",
-    quantity: 1,
-    amount: 12500,
-    paymentMethod: "M-Pesa",
-    status: "Paid",
-  },
+  const [sales, setSales] = useState<Sale[]>([
+    {
+      id: "#SALE001",
+      customer: "John Kamau",
+      product: "Laptop",
+      date: "Aug 13, 2026",
+      quantity: 1,
+      amount: 12500,
+      paymentMethod: "M-Pesa",
+      status: "Paid",
+    },
 
-  {
-    id: "#SALE002",
-    customer: "Mary Wanjiku",
-    product: "Keyboard",
-    date: "Aug 13, 2026",
-    quantity: 2,
-    amount: 8500,
-    paymentMethod: "Cash",
-    status: "Paid",
-  },
+    {
+      id: "#SALE002",
+      customer: "Mary Wanjiku",
+      product: "Keyboard",
+      date: "Aug 13, 2026",
+      quantity: 2,
+      amount: 8500,
+      paymentMethod: "Cash",
+      status: "Paid",
+    },
 
-  {
-    id: "#SALE003",
-    customer: "Brian Mwangi",
-    product: "Monitor",
-    date: "Aug 12, 2026",
-    quantity: 1,
-    amount: 15000,
-    paymentMethod: "Card",
-    status: "Pending",
-  },
+    {
+      id: "#SALE003",
+      customer: "Brian Mwangi",
+      product: "Monitor",
+      date: "Aug 12, 2026",
+      quantity: 1,
+      amount: 15000,
+      paymentMethod: "Card",
+      status: "Pending",
+    },
 
-  {
-    id: "#SALE004",
-    customer: "Grace Njeri",
-    product: "Mouse",
-    date: "Aug 11, 2026",
-    quantity: 3,
-    amount: 6200,
-    paymentMethod: "M-Pesa",
-    status: "Paid",
-  },
-]);
-
-// ==========================================================
-// ADD NEW SALE
-// ----------------------------------------------------------
-// Receives a newly created sale from RecordSaleForm and
-// adds it to the beginning of our existing sales array.
-// ==========================================================
-
-function handleSaleCreated(newSale: Sale) {
-  setSales((currentSales) => [
-    newSale,
-    ...currentSales,
+    {
+      id: "#SALE004",
+      customer: "Grace Njeri",
+      product: "Mouse",
+      date: "Aug 11, 2026",
+      quantity: 3,
+      amount: 6200,
+      paymentMethod: "M-Pesa",
+      status: "Paid",
+    },
   ]);
 
-  // Close the Record Sale form after submission.
-  setShowRecordSaleForm(false);
-}
+
+  // ==========================================================
+  // SALE CURRENTLY BEING EDITED
+  // ----------------------------------------------------------
+  // null = creating a new sale
+  // sale object = editing that specific sale
+  // ==========================================================
+
+  const [editingSale, setEditingSale] = useState<Sale | null>(null);
+
+
+  // ==========================================================
+  // ADD NEW SALE
+  // ==========================================================
+
+  function handleSaleCreated(newSale: Sale) {
+
+    setSales((currentSales) => [
+      newSale,
+      ...currentSales,
+    ]);
+
+    setShowRecordSaleForm(false);
+
+    setEditingSale(null);
+  }
+
+
+  // ==========================================================
+  // START EDITING A SALE
+  // ----------------------------------------------------------
+  // Called when the user clicks Edit inside SalesTable.
+  // ==========================================================
+
+  function handleEditSale(sale: Sale) {
+
+    // Store the selected sale.
+    setEditingSale(sale);
+
+    // Open the form.
+    setShowRecordSaleForm(true);
+
+  }
+
+
+  // ==========================================================
+  // UPDATE EXISTING SALE
+  // ----------------------------------------------------------
+  // Receives the edited sale from RecordSaleForm.
+  //
+  // We locate the original sale using its ID and replace it
+  // with the updated version.
+  // ==========================================================
+
+  function handleSaleUpdated(updatedSale: Sale) {
+
+    setSales((currentSales) =>
+      currentSales.map((sale) =>
+        sale.id === updatedSale.id
+          ? updatedSale
+          : sale
+      )
+    );
+
+
+    // Exit edit mode.
+    setEditingSale(null);
+
+    // Close the form.
+    setShowRecordSaleForm(false);
+
+
+    // Helpful debugging message.
+    console.log(
+      "Sale updated successfully:",
+      updatedSale
+    );
+
+  }
+
+
+  // ==========================================================
+  // CLOSE FORM
+  // ----------------------------------------------------------
+  // Used when the user clicks Close Form.
+  //
+  // We also clear editingSale so the next time the form opens
+  // it behaves like a new sale.
+  // ==========================================================
+
+  function handleCloseForm() {
+
+    setShowRecordSaleForm(false);
+
+    setEditingSale(null);
+
+  }
+
 
   return (
+
     <main>
 
+
       {/* ======================================================
-    PAGE HEADER
-    ------------------------------------------------------
-    Contains the Sales page title and the button used to
-    open the Record Sale form.
-    ====================================================== */}
+          PAGE HEADER
+          ====================================================== */}
 
-<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-  <div>
+        <div>
 
-    <h1 className="text-2xl font-bold text-slate-900">
-      Sales
-    </h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Sales
+          </h1>
 
-    <p className="mt-1 text-sm text-slate-500">
-      Manage your sales and transactions.
-    </p>
+          <p className="mt-1 text-sm text-slate-500">
+            Manage your sales and transactions.
+          </p>
 
-  </div>
+        </div>
 
 
-  {/* ====================================================
-      RECORD SALE BUTTON
-      ==================================================== */}
+        {/* ====================================================
+            RECORD / EDIT BUTTON
+            ==================================================== */}
 
-  <button
-    type="button"
-    onClick={() => setShowRecordSaleForm(!showRecordSaleForm)}
-    className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800"
-  >
-    {showRecordSaleForm ? "Close Form" : "+ Record Sale"}
-  </button>
+        <button
+          type="button"
+          onClick={
+            showRecordSaleForm
+              ? handleCloseForm
+              : () => setShowRecordSaleForm(true)
+          }
+          className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800"
+        >
 
-</div>
+          {showRecordSaleForm
+            ? "Close Form"
+            : "+ Record Sale"}
 
-  {/* ======================================================
-    RECORD SALE FORM
-    ------------------------------------------------------
-    The form only appears when showRecordSaleForm is true.
-    ====================================================== */}
+        </button>
 
-{showRecordSaleForm && (
-  <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      </div>
 
-    <div className="mb-6">
 
-      <h2 className="text-lg font-semibold text-slate-900">
-        Record New Sale
-      </h2>
+      {/* ======================================================
+          RECORD / EDIT SALE FORM
+          ====================================================== */}
 
-      <p className="mt-1 text-sm text-slate-500">
-        Enter the details of the new transaction.
-      </p>
+      {showRecordSaleForm && (
 
-    </div>
+        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
 
-    <RecordSaleForm onSaleCreated={handleSaleCreated} />
 
-  </div>
-)}
+          {/* ==================================================
+              FORM HEADER
+              ================================================== */}
+
+          <div className="mb-6">
+
+            <h2 className="text-lg font-semibold text-slate-900">
+
+              {editingSale
+                ? "Edit Sale"
+                : "Record New Sale"}
+
+            </h2>
+
+
+            <p className="mt-1 text-sm text-slate-500">
+
+              {editingSale
+                ? "Update the details of this transaction."
+                : "Enter the details of the new transaction."}
+
+            </p>
+
+          </div>
+
+
+          {/* ==================================================
+              RECORD SALE FORM
+              ================================================== */}
+
+          <RecordSaleForm
+            onSaleCreated={handleSaleCreated}
+            editingSale={editingSale}
+            onSaleUpdated={handleSaleUpdated}
+          />
+
+        </div>
+
+      )}
 
 
       {/* ======================================================
           SALES KPI CARDS
-          ------------------------------------------------------
-          These cards provide a quick overview of sales
-          performance.
           ====================================================== */}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -228,14 +332,20 @@ function handleSaleCreated(newSale: Sale) {
 
 
       {/* ======================================================
-    SALES TRANSACTIONS
-    ------------------------------------------------------
-    Displays the latest sales made by the business.
-    ====================================================== */}
+          SALES TRANSACTIONS
+          ------------------------------------------------------
+          Displays the latest sales.
+          ====================================================== */}
 
-<div className="mt-6">
-  <SalesTable sales={sales} />
-</div>
+      <div className="mt-6">
+
+        <SalesTable
+          sales={sales}
+          onEdit={handleEditSale}
+        />
+
+      </div>
+
 
     </main>
   );
