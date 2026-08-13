@@ -19,20 +19,6 @@ import { Sale } from "../types/sale";
 // ============================================================
 // RECORD SALE FORM PROPS
 // ============================================================
-// onSaleCreated
-// ------------------------------------------------------------
-// Used when creating a brand-new sale.
-//
-// editingSale
-// ------------------------------------------------------------
-// Contains the sale currently being edited.
-//
-// null = creating a new sale.
-//
-// onSaleUpdated
-// ------------------------------------------------------------
-// Sends the edited sale back to the Sales page.
-// ============================================================
 
 interface RecordSaleFormProps {
   onSaleCreated: (sale: Sale) => void;
@@ -119,17 +105,10 @@ export default function RecordSaleForm({
 
   // ==========================================================
   // LOAD EXISTING SALE WHEN EDITING
-  // ----------------------------------------------------------
-  // When the user clicks Edit in SalesTable, the selected sale
-  // is passed into this component.
-  //
-  // This effect loads all of that sale's information into
-  // the form fields.
   // ==========================================================
 
   useEffect(() => {
 
-    // If there is no sale being edited, do nothing.
     if (!editingSale) {
       return;
     }
@@ -148,12 +127,6 @@ export default function RecordSaleForm({
 
     // --------------------------------------------------------
     // UNIT PRICE
-    // --------------------------------------------------------
-    // The Sale object stores the total amount.
-    //
-    // We calculate the original unit price using:
-    //
-    // total amount ÷ quantity
     // --------------------------------------------------------
 
     setUnitPrice(
@@ -207,10 +180,6 @@ export default function RecordSaleForm({
 
   // ==========================================================
   // AUTOMATIC TOTAL
-  // ----------------------------------------------------------
-  // KimBiz calculates the total automatically.
-  //
-  // Quantity × Unit Price = Total
   // ==========================================================
 
   const total = quantity * unitPrice;
@@ -228,12 +197,24 @@ export default function RecordSaleForm({
 
 
     // ========================================================
-    // SALE DATA
+    // TIMESTAMP
     // --------------------------------------------------------
-    // If we are editing an existing sale, keep its original ID
-    // and original date.
+    // Capture the exact moment the form is submitted.
     //
-    // If this is a new sale, create a new ID and date.
+    // New sale:
+    // createdAt = current time
+    // updatedAt = current time
+    //
+    // Edited sale:
+    // createdAt = original creation time
+    // updatedAt = current time
+    // ========================================================
+
+    const currentTimestamp = new Date().toISOString();
+
+
+    // ========================================================
+    // SALE DATA
     // ========================================================
 
     const sale: Sale = {
@@ -253,6 +234,18 @@ export default function RecordSaleForm({
             month: "short",
             year: "numeric",
           }),
+
+
+      // ======================================================
+      // ACTIVITY TIMESTAMPS
+      // ======================================================
+
+      createdAt: editingSale
+        ? editingSale.createdAt
+        : currentTimestamp,
+
+      updatedAt: currentTimestamp,
+
 
       quantity,
 
@@ -318,14 +311,6 @@ export default function RecordSaleForm({
 
     // ========================================================
     // CREATE OR UPDATE
-    // --------------------------------------------------------
-    // New sale
-    //     ↓
-    // onSaleCreated()
-    //
-    // Existing sale
-    //     ↓
-    // onSaleUpdated()
     // ========================================================
 
     if (editingSale) {

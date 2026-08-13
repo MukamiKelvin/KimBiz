@@ -8,27 +8,53 @@
 // all understand what a Sale should contain.
 // ==========================================================
 
+
 export interface Sale {
   // Unique identifier for the sale.
   id: string;
 
+
   // Customer who made the purchase.
   customer: string;
+
 
   // Product that was sold.
   product: string;
 
+
   // Date the sale was recorded.
   date: string;
+
+
+  // ========================================================
+  // ACTIVITY TIMESTAMPS
+  // ========================================================
+  // createdAt = exact date and time the sale was created.
+  //
+  // updatedAt = exact date and time the sale was last edited.
+  //
+  // These will later also help us build the audit history.
+  // ========================================================
+
+  // Exact date and time the sale was created.
+  createdAt: string;
+
+
+  // Exact date and time the sale was last updated.
+  updatedAt: string;
+
 
   // Number of products sold.
   quantity: number;
 
+
   // Total amount of the sale.
   amount: number;
 
+
   // Method used to make the payment.
   paymentMethod: string;
+
 
   // Current payment status.
   status:
@@ -39,6 +65,7 @@ export interface Sale {
     | "Cancelled"
     | "Refunded";
 
+
   // --------------------------------------------------------
   // ADDITIONAL PAYMENT INFORMATION
   // --------------------------------------------------------
@@ -46,23 +73,30 @@ export interface Sale {
   // Amount the customer has already paid.
   amountPaid?: number;
 
+
   // Date by which a pending payment should be completed.
   dueDate?: string;
+
 
   // Date from which the payment became overdue.
   overdueSince?: string;
 
+
   // Date the sale was cancelled.
   cancellationDate?: string;
+
 
   // Reason why the sale was cancelled.
   cancellationReason?: string;
 
+
   // Amount returned to the customer.
   refundAmount?: number;
 
+
   // Date the refund was issued.
   refundDate?: string;
+
 
   // Reason why the refund was issued.
   refundReason?: string;

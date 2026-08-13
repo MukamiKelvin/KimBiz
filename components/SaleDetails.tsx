@@ -1,11 +1,14 @@
 // ============================================================
 // KIMBIZ - SALE DETAILS
 // ============================================================
-// Displays complete information about a sale.
+// Displays complete information about a selected sale.
 //
-// The SalesTable intentionally shows only the most important
-// information. This component allows the user to see everything
-// recorded for a specific sale.
+// This component is opened when the user clicks the eye icon
+// in the SalesTable.
+//
+// It displays information that may not be visible in the
+// main sales table, including payment details, cancellation
+// information, refund information, and activity timestamps.
 // ============================================================
 
 "use client";
@@ -14,13 +17,43 @@ import { Sale } from "../types/sale";
 
 
 // ============================================================
-// COMPONENT PROPS
+// SALE DETAILS PROPS
 // ============================================================
 
 interface SaleDetailsProps {
   sale: Sale;
+
+  // Closes the details modal.
   onClose: () => void;
+
+  // Opens the selected sale in edit mode.
   onEdit: (sale: Sale) => void;
+}
+
+
+// ============================================================
+// DATE + TIME FORMATTER
+// ============================================================
+
+function formatDateTime(value?: string) {
+
+  if (!value) {
+    return "Not available";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 
@@ -35,34 +68,55 @@ export default function SaleDetails({
 }: SaleDetailsProps) {
 
   // ==========================================================
-  // CALCULATE BALANCE
-  // ----------------------------------------------------------
-  // Only relevant when the customer has partially paid.
+  // STATUS BADGE
   // ==========================================================
 
-  const balance =
-    sale.status === "Partially Paid"
-      ? sale.amount - (sale.amountPaid ?? 0)
-      : 0;
+  const statusClass =
+    sale.status === "Paid"
+      ? "bg-green-100 text-green-700"
+      : sale.status === "Pending"
+      ? "bg-amber-100 text-amber-700"
+      : sale.status === "Partially Paid"
+      ? "bg-blue-100 text-blue-700"
+      : sale.status === "Overdue"
+      ? "bg-red-100 text-red-700"
+      : sale.status === "Cancelled"
+      ? "bg-slate-200 text-slate-700"
+      : "bg-purple-100 text-purple-700";
+
+
+  // ==========================================================
+  // REMAINING BALANCE
+  // ==========================================================
+
+  const amountPaid = sale.amountPaid ?? 0;
+
+  const remainingBalance =
+    sale.amount - amountPaid;
 
 
   return (
 
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={onClose}
+    >
+
+      {/* ====================================================
+          MODAL
+          ==================================================== */}
+
+      <div
+        className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-xl"
+        onClick={(event) => event.stopPropagation()}
+      >
 
 
-      {/* ======================================================
-          DETAILS PANEL
-          ====================================================== */}
-
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl">
-
-
-        {/* ====================================================
+        {/* ==================================================
             HEADER
-            ==================================================== */}
+            ================================================== */}
 
-        <div className="flex items-center justify-between border-b border-slate-200 p-6">
+        <div className="flex items-start justify-between border-b border-slate-200 p-6">
 
           <div>
 
@@ -74,211 +128,188 @@ export default function SaleDetails({
               {sale.id}
             </h2>
 
+            <p className="mt-1 text-sm text-slate-500">
+              Complete information about this transaction.
+            </p>
+
           </div>
 
+
+          {/* CLOSE BUTTON */}
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+            aria-label="Close sale details"
+            className="rounded-lg px-3 py-2 text-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700"
           >
-            Close
+            ×
           </button>
 
         </div>
 
 
-        {/* ====================================================
-            SALE INFORMATION
-            ==================================================== */}
+        {/* ==================================================
+            CONTENT
+            ================================================== */}
 
-        <div className="p-6">
-
-          <h3 className="text-sm font-semibold text-slate-900">
-            Sale Information
-          </h3>
+        <div className="space-y-6 p-6">
 
 
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* ==================================================
+              SALE INFORMATION
+              ================================================== */}
+
+          <section>
+
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Sale Information
+            </h3>
 
 
-            {/* Customer */}
-
-            <div>
-
-              <p className="text-xs text-slate-500">
-                Customer
-              </p>
-
-              <p className="mt-1 text-sm font-medium text-slate-900">
-                {sale.customer}
-              </p>
-
-            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
 
-            {/* Product */}
+              <div>
+                <p className="text-xs text-slate-500">
+                  Sale ID
+                </p>
 
-            <div>
-
-              <p className="text-xs text-slate-500">
-                Product
-              </p>
-
-              <p className="mt-1 text-sm font-medium text-slate-900">
-                {sale.product}
-              </p>
-
-            </div>
+                <p className="mt-1 text-sm font-medium text-slate-900">
+                  {sale.id}
+                </p>
+              </div>
 
 
-            {/* Quantity */}
+              <div>
+                <p className="text-xs text-slate-500">
+                  Customer
+                </p>
 
-            <div>
-
-              <p className="text-xs text-slate-500">
-                Quantity
-              </p>
-
-              <p className="mt-1 text-sm font-medium text-slate-900">
-                {sale.quantity}
-              </p>
-
-            </div>
+                <p className="mt-1 text-sm font-medium text-slate-900">
+                  {sale.customer}
+                </p>
+              </div>
 
 
-            {/* Total */}
+              <div>
+                <p className="text-xs text-slate-500">
+                  Product
+                </p>
 
-            <div>
-
-              <p className="text-xs text-slate-500">
-                Total Amount
-              </p>
-
-              <p className="mt-1 text-sm font-semibold text-slate-900">
-                KSh {sale.amount.toLocaleString()}
-              </p>
-
-            </div>
+                <p className="mt-1 text-sm font-medium text-slate-900">
+                  {sale.product}
+                </p>
+              </div>
 
 
-            {/* Date */}
+              <div>
+                <p className="text-xs text-slate-500">
+                  Quantity
+                </p>
 
-            <div>
-
-              <p className="text-xs text-slate-500">
-                Date
-              </p>
-
-              <p className="mt-1 text-sm font-medium text-slate-900">
-                {sale.date}
-              </p>
-
-            </div>
+                <p className="mt-1 text-sm font-medium text-slate-900">
+                  {sale.quantity}
+                </p>
+              </div>
 
 
-            {/* Payment Method */}
+              <div>
+                <p className="text-xs text-slate-500">
+                  Sale Date
+                </p>
 
-            <div>
+                <p className="mt-1 text-sm font-medium text-slate-900">
+                  {sale.date}
+                </p>
+              </div>
 
-              <p className="text-xs text-slate-500">
-                Payment Method
-              </p>
 
-              <p className="mt-1 text-sm font-medium text-slate-900">
-                {sale.paymentMethod}
-              </p>
+              <div>
+                <p className="text-xs text-slate-500">
+                  Total Amount
+                </p>
+
+                <p className="mt-1 text-sm font-semibold text-slate-900">
+                  KSh {sale.amount.toLocaleString()}
+                </p>
+              </div>
 
             </div>
 
-          </div>
+          </section>
 
 
           {/* ==================================================
               PAYMENT INFORMATION
               ================================================== */}
 
-          <div className="mt-8 border-t border-slate-200 pt-6">
+          <section className="border-t border-slate-200 pt-6">
 
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
               Payment Information
             </h3>
 
 
-            <div className="mt-4 rounded-lg bg-slate-50 p-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
 
-              {/* Status */}
+              <div>
+                <p className="text-xs text-slate-500">
+                  Payment Method
+                </p>
 
-              <div className="flex items-center justify-between">
-
-                <span className="text-sm text-slate-500">
-                  Status
-                </span>
-
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    sale.status === "Paid"
-                      ? "bg-green-100 text-green-700"
-                      : sale.status === "Pending"
-                      ? "bg-amber-100 text-amber-700"
-                      : sale.status === "Partially Paid"
-                      ? "bg-blue-100 text-blue-700"
-                      : sale.status === "Overdue"
-                      ? "bg-red-100 text-red-700"
-                      : sale.status === "Cancelled"
-                      ? "bg-slate-200 text-slate-700"
-                      : "bg-purple-100 text-purple-700"
-                  }`}
-                >
-                  {sale.status}
-                </span>
-
+                <p className="mt-1 text-sm font-medium text-slate-900">
+                  {sale.paymentMethod}
+                </p>
               </div>
 
 
-              {/* Partially Paid */}
+              <div>
+                <p className="text-xs text-slate-500">
+                  Status
+                </p>
+
+                <span
+                  className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-medium ${statusClass}`}
+                >
+                  {sale.status}
+                </span>
+              </div>
+
+
+              {/* PARTIALLY PAID */}
 
               {sale.status === "Partially Paid" && (
-
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-
+                <>
                   <div>
-
                     <p className="text-xs text-slate-500">
                       Amount Paid
                     </p>
 
                     <p className="mt-1 text-sm font-medium text-slate-900">
-                      KSh {(sale.amountPaid ?? 0).toLocaleString()}
+                      KSh {amountPaid.toLocaleString()}
                     </p>
-
                   </div>
 
 
                   <div>
-
                     <p className="text-xs text-slate-500">
-                      Balance
+                      Remaining Balance
                     </p>
 
-                    <p className="mt-1 text-sm font-medium text-slate-900">
-                      KSh {balance.toLocaleString()}
+                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                      KSh {Math.max(remainingBalance, 0).toLocaleString()}
                     </p>
-
                   </div>
-
-                </div>
-
+                </>
               )}
 
 
-              {/* Pending */}
+              {/* PENDING */}
 
               {sale.status === "Pending" && sale.dueDate && (
-
-                <div className="mt-4">
-
+                <div>
                   <p className="text-xs text-slate-500">
                     Due Date
                   </p>
@@ -286,172 +317,214 @@ export default function SaleDetails({
                   <p className="mt-1 text-sm font-medium text-slate-900">
                     {sale.dueDate}
                   </p>
-
                 </div>
-
               )}
 
 
-              {/* Overdue */}
+              {/* OVERDUE */}
 
               {sale.status === "Overdue" && sale.overdueSince && (
-
-                <div className="mt-4">
-
+                <div>
                   <p className="text-xs text-slate-500">
                     Overdue Since
                   </p>
 
-                  <p className="mt-1 text-sm font-medium text-red-700">
+                  <p className="mt-1 text-sm font-medium text-red-600">
                     {sale.overdueSince}
                   </p>
-
                 </div>
-
-              )}
-
-
-              {/* Cancelled */}
-
-              {sale.status === "Cancelled" && (
-
-                <div className="mt-4 space-y-4">
-
-
-                  {sale.cancellationDate && (
-
-                    <div>
-
-                      <p className="text-xs text-slate-500">
-                        Cancellation Date
-                      </p>
-
-                      <p className="mt-1 text-sm font-medium text-slate-900">
-                        {sale.cancellationDate}
-                      </p>
-
-                    </div>
-
-                  )}
-
-
-                  {sale.cancellationReason && (
-
-                    <div>
-
-                      <p className="text-xs text-slate-500">
-                        Cancellation Reason
-                      </p>
-
-                      <p className="mt-1 text-sm text-slate-700">
-                        {sale.cancellationReason}
-                      </p>
-
-                    </div>
-
-                  )}
-
-                </div>
-
-              )}
-
-
-              {/* Refunded */}
-
-              {sale.status === "Refunded" && (
-
-                <div className="mt-4 space-y-4">
-
-
-                  {sale.refundAmount !== undefined && (
-
-                    <div>
-
-                      <p className="text-xs text-slate-500">
-                        Refund Amount
-                      </p>
-
-                      <p className="mt-1 text-sm font-medium text-slate-900">
-                        KSh {sale.refundAmount.toLocaleString()}
-                      </p>
-
-                    </div>
-
-                  )}
-
-
-                  {sale.refundDate && (
-
-                    <div>
-
-                      <p className="text-xs text-slate-500">
-                        Refund Date
-                      </p>
-
-                      <p className="mt-1 text-sm font-medium text-slate-900">
-                        {sale.refundDate}
-                      </p>
-
-                    </div>
-
-                  )}
-
-
-                  {sale.refundReason && (
-
-                    <div>
-
-                      <p className="text-xs text-slate-500">
-                        Refund Reason
-                      </p>
-
-                      <p className="mt-1 text-sm text-slate-700">
-                        {sale.refundReason}
-                      </p>
-
-                    </div>
-
-                  )}
-
-                </div>
-
               )}
 
             </div>
 
-          </div>
+          </section>
 
 
           {/* ==================================================
-              ACTIONS
+              CANCELLATION INFORMATION
               ================================================== */}
 
-          <div className="mt-8 flex justify-end gap-3 border-t border-slate-200 pt-6">
+          {sale.status === "Cancelled" && (
+            <section className="border-t border-slate-200 pt-6">
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Close
-            </button>
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                Cancellation Information
+              </h3>
 
 
-            <button
-              type="button"
-              onClick={() => onEdit(sale)}
-              className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800"
-            >
-              Edit Sale
-            </button>
+              <div className="space-y-4">
 
-          </div>
+
+                {sale.cancellationDate && (
+                  <div>
+                    <p className="text-xs text-slate-500">
+                      Cancellation Date
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-slate-900">
+                      {sale.cancellationDate}
+                    </p>
+                  </div>
+                )}
+
+
+                {sale.cancellationReason && (
+                  <div>
+                    <p className="text-xs text-slate-500">
+                      Cancellation Reason
+                    </p>
+
+                    <div className="mt-1 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+                      {sale.cancellationReason}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+
+            </section>
+          )}
+
+
+          {/* ==================================================
+              REFUND INFORMATION
+              ================================================== */}
+
+          {sale.status === "Refunded" && (
+            <section className="border-t border-slate-200 pt-6">
+
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                Refund Information
+              </h3>
+
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+
+                {sale.refundAmount !== undefined && (
+                  <div>
+                    <p className="text-xs text-slate-500">
+                      Refund Amount
+                    </p>
+
+                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                      KSh {sale.refundAmount.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+
+
+                {sale.refundDate && (
+                  <div>
+                    <p className="text-xs text-slate-500">
+                      Refund Date
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-slate-900">
+                      {sale.refundDate}
+                    </p>
+                  </div>
+                )}
+
+
+                {sale.refundReason && (
+                  <div className="sm:col-span-2">
+
+                    <p className="text-xs text-slate-500">
+                      Refund Reason
+                    </p>
+
+                    <div className="mt-1 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+                      {sale.refundReason}
+                    </div>
+
+                  </div>
+                )}
+
+              </div>
+
+            </section>
+          )}
+
+
+          {/* ==================================================
+              ACTIVITY
+              ================================================== */}
+
+          <section className="border-t border-slate-200 pt-6">
+
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Activity
+            </h3>
+
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+
+              {/* CREATED */}
+
+              <div>
+
+                <p className="text-xs text-slate-500">
+                  Recorded
+                </p>
+
+                <p className="mt-1 text-sm font-medium text-slate-900">
+                  {formatDateTime(sale.createdAt)}
+                </p>
+
+              </div>
+
+
+              {/* UPDATED */}
+
+              <div>
+
+                <p className="text-xs text-slate-500">
+                  Last Updated
+                </p>
+
+                <p className="mt-1 text-sm font-medium text-slate-900">
+                  {formatDateTime(sale.updatedAt)}
+                </p>
+
+              </div>
+
+            </div>
+
+          </section>
+
+        </div>
+
+
+        {/* ==================================================
+            FOOTER
+            ================================================== */}
+
+        <div className="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 p-6">
+
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          >
+            Close
+          </button>
+
+
+          <button
+            type="button"
+            onClick={() => onEdit(sale)}
+            className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Edit Sale
+          </button>
 
         </div>
 
       </div>
 
     </div>
-
   );
 }
