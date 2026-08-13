@@ -20,14 +20,9 @@
 // the correct properties and data types.
 // ============================================================
 
-interface Sale {
-  id: string;
-  customer: string;
-  date: string;
-  amount: number;
-  paymentMethod: string;
-  status: "Paid" | "Pending";
-}
+import { Sale } from "../types/sale";
+
+
 
 
 // ============================================================
@@ -38,47 +33,17 @@ interface Sale {
 // Later, the data will be retrieved from our database.
 // ============================================================
 
-const sales: Sale[] = [
-  {
-    id: "#SALE001",
-    customer: "John Kamau",
-    date: "Aug 13, 2026",
-    amount: 12500,
-    paymentMethod: "M-Pesa",
-    status: "Paid",
-  },
-  {
-    id: "#SALE002",
-    customer: "Mary Wanjiku",
-    date: "Aug 13, 2026",
-    amount: 8500,
-    paymentMethod: "Cash",
-    status: "Paid",
-  },
-  {
-    id: "#SALE003",
-    customer: "Brian Mwangi",
-    date: "Aug 12, 2026",
-    amount: 15000,
-    paymentMethod: "Card",
-    status: "Pending",
-  },
-  {
-    id: "#SALE004",
-    customer: "Grace Njeri",
-    date: "Aug 11, 2026",
-    amount: 6200,
-    paymentMethod: "M-Pesa",
-    status: "Paid",
-  },
-];
 
 
 // ============================================================
 // SALES TABLE COMPONENT
 // ============================================================
 
-export default function SalesTable() {
+export default function SalesTable({
+  sales,
+}: {
+  sales: Sale[];
+}) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
 
